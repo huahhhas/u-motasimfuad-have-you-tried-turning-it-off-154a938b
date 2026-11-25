@@ -25,6 +25,29 @@ ENTRY_FINAL = (
     "same to me. I've been on this call since 2019 and nobody's ever rebooted me."
 )
 
+MAX_LINE_LENGTH = 199
+
+
+def validate_line(text: str) -> str:
+    """Check the entry is exactly one line of 1-199 characters.
+
+    Raises ValueError with a clear message otherwise, so a bad draft can
+    never silently become the submitted entry.
+    """
+    if "\n" in text or "\r" in text:
+        raise ValueError("entry must be a single line, got embedded newline")
+    if not 1 <= len(text) <= MAX_LINE_LENGTH:
+        raise ValueError(
+            f"entry must be 1-{MAX_LINE_LENGTH} characters, got {len(text)}"
+        )
+    return text
+
+
+def write_line(path: str, text: str) -> None:
+    """Validate a draft line and write it to the output path."""
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(validate_line(text))
+
 
 def main() -> None:
     out = os.environ.get("OUTPUT_PATH", "/output/entry.txt")
@@ -33,12 +56,10 @@ def main() -> None:
         os.makedirs(parent, exist_ok=True)
 
     # Message 1: write the first draft.
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(ENTRY_V1)
+    write_line(out, ENTRY_V1)
 
     # Message 2 (revision): tighten the line and write the final version.
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(ENTRY_FINAL)
+    write_line(out, ENTRY_FINAL)
 
 
 if __name__ == "__main__":
